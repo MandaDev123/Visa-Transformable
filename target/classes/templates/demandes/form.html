@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${demandeResponse != null ? 'Modifier Demande #' + demandeResponse.id : 'Nouvelle Demande'} + ' | Visa Backoffice'">Formulaire | Visa Backoffice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <a href="/demandes" class="navbar-brand">
+                <span class="logo-icon">🛂</span>
+                <span>Visa Backoffice</span>
+            </a>
+            <ul class="navbar-nav">
+                <li><a th:href="@{/demandes}">📋 Demandes</a></li>
+                <li><a th:href="@{/demandes/nouveau}" class="active">➕ Nouvelle</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content fade-in">
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error">
+                <span>❌</span>
+                <span th:text="${error}"></span>
+            </div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 th:if="${demandeResponse == null}">➕ Nouvelle Demande de Visa</h1>
+                    <h1 th:if="${demandeResponse != null}">✏️ Modifier Demande #<span th:text="${demandeResponse.id}"></span></h1>
+                    <p class="subtitle">Remplissez le formulaire ci-dessous. Vous pouvez sauvegarder à tout moment, même si le formulaire est incomplet.</p>
+                </div>
+                <a th:href="@{/demandes}" class="btn btn-secondary">← Retour à la liste</a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📝 Informations du demandeur</h2>
+                    <span th:if="${demandeResponse != null and demandeResponse.statut != null and demandeResponse.statut.name() == 'BROUILLON'}"
+                          class="badge badge-brouillon">
+                        <span class="badge-dot"></span> Brouillon
+                    </span>
+                    <span th:if="${demandeResponse != null and demandeResponse.statut != null and demandeResponse.statut.name() == 'DOSSIER_CREE'}"
+                          class="badge badge-dossier-cree">
+                        <span class="badge-dot"></span> Dossier Créé
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- CREATE form -->
+                    <form th:if="${demandeResponse == null}" th:action="@{/demandes}" method="post" id="demandeForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Date de demande <span class="required">*</span></label>
+                                <input type="date" class="form-control" name="dateDemande" required>
+                            </div>
+                            <div class="form-group">
+                                <label>N° Passeport <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="numeroPasseport" placeholder="Ex: AB123456" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" class="form-control" name="nom" placeholder="Nom de famille">
+                            </div>
+                            <div class="form-group">
+                                <label>Prénoms</label>
+                                <input type="text" class="form-control" name="prenoms" placeholder="Prénoms">
+                            </div>
+                            <div class="form-group">
+                                <label>Type de Visa</label>
+                                <select class="form-control" name="typeVisa" id="typeVisaSelect" onchange="onTypeVisaChange()">
+                                    <option value="">-- Sélectionnez --</option>
+                                    <option value="TRAVAIL">Travail</option>
+                                    <option value="ETUDE">Études</option>
+                                    <option value="TOURISME">Tourisme</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Catégorie</label>
+                                <input type="text" class="form-control" name="categorie" placeholder="Catégorie">
+                            </div>
+                        </div>
+
+                        <!-- Pieces section - populated dynamically -->
+                        <div class="pieces-section" id="piecesSection" style="display:none;">
+                            <h3>📎 Pièces Justificatives</h3>
+                            <div class="piece-grid" id="piecesGrid">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="@{/demandes}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-success">💾 Sauvegarder</button>
+                        </div>
+                    </form>
+
+                    <!-- EDIT form -->
+                    <form th:if="${demandeResponse != null}" th:action="@{'/demandes/' + ${demandeResponse.id}}" method="post" id="demandeForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Date de demande <span class="required">*</span></label>
+                                <input type="date" class="form-control" name="dateDemande"
+                                       th:value="${demandeResponse.dateDemande}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>N° Passeport <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="numeroPasseport"
+                                       th:value="${demandeResponse.numeroPasseport}" placeholder="Ex: AB123456" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" class="form-control" name="nom"
+                                       th:value="${demandeResponse.nom}" placeholder="Nom de famille">
+                            </div>
+                            <div class="form-group">
+                                <label>Prénoms</label>
+                                <input type="text" class="form-control" name="prenoms"
+                                       th:value="${demandeResponse.prenoms}" placeholder="Prénoms">
+                            </div>
+                            <div class="form-group">
+                                <label>Type de Visa</label>
+                                <select class="form-control" name="typeVisa" id="typeVisaSelect">
+                                    <option value="">-- Sélectionnez --</option>
+                                    <option value="TRAVAIL" th:selected="${demandeResponse.typeVisa == 'TRAVAIL'}">Travail</option>
+                                    <option value="ETUDE" th:selected="${demandeResponse.typeVisa == 'ETUDE'}">Études</option>
+                                    <option value="TOURISME" th:selected="${demandeResponse.typeVisa == 'TOURISME'}">Tourisme</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Catégorie</label>
+                                <input type="text" class="form-control" name="categorie"
+                                       th:value="${demandeResponse.categorie}" placeholder="Catégorie">
+                            </div>
+                        </div>
+
+                        <!-- Pieces for edit mode -->
+                        <div class="pieces-section" th:if="${demandeResponse.pieces != null and !demandeResponse.pieces.isEmpty()}">
+                            <h3>📎 Pièces Justificatives</h3>
+                            <div class="piece-grid">
+                                <label class="piece-item" th:each="piece, iter : ${demandeResponse.pieces}">
+                                    <input type="hidden" th:name="'pieces[' + ${iter.index} + '].pieceId'" th:value="${piece.pieceId}">
+                                    <input type="checkbox"
+                                           th:name="'pieces[' + ${iter.index} + '].fourni'"
+                                           th:value="true"
+                                           th:checked="${piece.fourni}">
+                                    <span class="piece-label" th:text="${piece.nomPiece}">Nom de la pièce</span>
+                                    <span class="piece-tag obligatoire" th:if="${piece.obligatoire}">Obligatoire</span>
+                                    <span class="piece-tag optionnel" th:if="${!piece.obligatoire}">Optionnel</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a th:href="@{'/demandes/' + ${demandeResponse.id}}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-success">💾 Sauvegarder les modifications</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2026 Visa Backoffice — Gestion des Demandes de Visa Transformable</p>
+        </footer>
+    </div>
+
+    <script>
+        // Dynamic pieces loading in create mode
+        const piecesData = {
+            'TRAVAIL': [
+                { nom: 'Passeport valide', obligatoire: true },
+                { nom: "Photo d'identité", obligatoire: true },
+                { nom: 'Formulaire de demande signé', obligatoire: true },
+                { nom: 'Justificatif de domicile', obligatoire: true },
+                { nom: 'Contrat de travail', obligatoire: true },
+                { nom: 'Attestation employeur', obligatoire: true }
+            ],
+            'ETUDE': [
+                { nom: 'Passeport valide', obligatoire: true },
+                { nom: "Photo d'identité", obligatoire: true },
+                { nom: 'Formulaire de demande signé', obligatoire: true },
+                { nom: 'Justificatif de domicile', obligatoire: true },
+                { nom: "Attestation d'inscription", obligatoire: true },
+                { nom: 'Justificatif de ressources', obligatoire: true }
+            ],
+            'TOURISME': [
+                { nom: 'Passeport valide', obligatoire: true },
+                { nom: "Photo d'identité", obligatoire: true },
+                { nom: 'Formulaire de demande signé', obligatoire: true },
+                { nom: 'Justificatif de domicile', obligatoire: true },
+                { nom: 'Réservation hôtel', obligatoire: false },
+                { nom: 'Billet aller-retour', obligatoire: true }
+            ]
+        };
+
+        function onTypeVisaChange() {
+            const type = document.getElementById('typeVisaSelect').value;
+            const section = document.getElementById('piecesSection');
+            const grid = document.getElementById('piecesGrid');
+
+            if (!section || !grid) return;
+
+            if (type && piecesData[type]) {
+                section.style.display = 'block';
+                grid.innerHTML = '';
+                piecesData[type].forEach((piece, index) => {
+                    const label = document.createElement('label');
+                    label.className = 'piece-item';
+                    label.innerHTML = `
+                        <input type="checkbox" name="pieces[${index}].fourni" value="true">
+                        <input type="hidden" name="pieces[${index}].pieceId" value="${index + 1}">
+                        <span class="piece-label">${piece.nom}</span>
+                        <span class="piece-tag ${piece.obligatoire ? 'obligatoire' : 'optionnel'}">${piece.obligatoire ? 'Obligatoire' : 'Optionnel'}</span>
+                    `;
+                    grid.appendChild(label);
+                });
+            } else {
+                section.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

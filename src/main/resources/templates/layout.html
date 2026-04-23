@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' | Visa Backoffice' : 'Visa Backoffice'}">Visa Backoffice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <a href="/demandes" class="navbar-brand">
+                <span class="logo-icon">🛂</span>
+                <span>Visa Backoffice</span>
+            </a>
+            <ul class="navbar-nav">
+                <li><a th:href="@{/demandes}" th:classappend="${activeTab == 'list' ? 'active' : ''}">📋 Demandes</a></li>
+                <li><a th:href="@{/demandes/nouveau}" th:classappend="${activeTab == 'new' ? 'active' : ''}">➕ Nouvelle</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content fade-in">
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error">
+                <span>❌</span>
+                <span th:text="${error}"></span>
+            </div>
+
+            <!-- Page Content injected here -->
+            <div th:replace="~{${view} :: content}"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2026 Visa Backoffice — Gestion des Demandes de Visa Transformable</p>
+        </footer>
+    </div>
+</body>
+</html>
