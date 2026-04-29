@@ -16,9 +16,21 @@ Si on tape son numéro et que ses données n'existent pas dans notre base alors 
 Nb: c'est le dernier statut ,c'est à dire que après la demande ,le demandeur reçoit son visa et sa carte résident 
 
 
-Sprint 3 : l'opérateur de saisie scanné le dossier physique (par upload) ,c'est a dire le passeport,pièce justificative,photo,pour l'attacher avec le dossier existant si il y en a ...il y a un bouton pour arrêter le scan après scan le statut est SCAN TERMINÉ(plus de modifications)
+Sprint 3 : l'opérateur de saisie scanne le dossier physique (par upload) ,c'est a dire le passeport,pièce justificative,photo,pour l'attacher avec le dossier existant si il y en a ...il y a un bouton pour arrêter le scan après scan le statut est SCAN TERMINÉ(plus de modifications)
 
 manova an'le status scan termine ,tsy afaka atao scan termine raha mbola misy piece justificative optionnel tsy vita
 tsy afaka saisisena mitsn manko raha misy justificatif na information obligatoire tsy natao saisie 
 
-scan termine = feno daolly le dossier rehetra obli et optionnel 
+scan termine = tous les pieces justificatives obli et optionnel sont fournies
+
+
+Finalite : 
+Si le status est scan termine alors on affiche en bas un bouton approuver ,pour que le status change en
+approuve
+
+
+>> Delivrance : Si le status est approuve alors on accorde le visa et la carte resident en generant les deux en pdf et en affichant en bas un bouton imprimer
+
+>> Mise en forme du pdf genere (attestation de recepisse),juste les pieces fournies qu'on affiche mais
+pas de oui ou non 
+

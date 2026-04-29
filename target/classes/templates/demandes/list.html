@@ -116,7 +116,7 @@
                                 <th>Date</th>
                                 <th>Nom Complet</th>
                                 <th>Catégorie</th>
-                                <th>N° Passeport</th>
+                                <th>N° Visa</th>
                                 <th>Type Visa</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
@@ -141,7 +141,7 @@
                                 <td>
                                     <code
                                         style="background: var(--bg-primary); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;"
-                                        th:text="${demande.numeroPasseport}"></code>
+                                        th:text="${demande.numeroVisa}"></code>
                                 </td>
                                 <td th:text="${demande.typeVisa != null ? demande.typeVisa : '—'}"></td>
                                 <td>
@@ -177,6 +177,16 @@
                                                 title="Arrêter le scan"
                                                 onclick="return confirm('Êtes-vous sûr de vouloir terminer le scan ? Vous ne pourrez plus modifier cette demande.');">🛑
                                                 Scan Terminé</button>
+                                        </form>
+                                        <form
+                                            th:if="${demande.statut != null and demande.statut.name() == 'SCAN_TERMINE'}"
+                                            th:action="@{'/demandes/' + ${demande.id} + '/approuver'}" method="post"
+                                            style="display:inline;">
+                                            <button type="submit" class="btn btn-sm"
+                                                style="background: var(--accent-success); color: white; border: none;"
+                                                title="Approuver la demande"
+                                                onclick="return confirm('Approuver cette demande ?');">✅
+                                                Approuver</button>
                                         </form>
                                         <a th:if="${demande.statut != null and (demande.statut.name() == 'DOSSIER_CREE' or demande.statut.name() == 'SCAN_TERMINE' or demande.statut.name() == 'VISA_APPROUVE')}"
                                             th:href="@{'/api/demandes/' + ${demande.id} + '/pdf'}" target="_blank"

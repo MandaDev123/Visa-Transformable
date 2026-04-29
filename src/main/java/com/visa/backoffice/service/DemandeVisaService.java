@@ -207,6 +207,24 @@ public class DemandeVisaService {
     }
 
     // =============================================
+    // Approuver la demande
+    // =============================================
+    @Transactional
+    public DemandeVisaResponseDTO approuverDemande(Long id) {
+        DemandeVisa demande = demandeVisaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée avec l'id : " + id));
+
+        if (demande.getStatut() != StatutDemande.SCAN_TERMINE) {
+            throw new IllegalStateException("Impossible d'approuver : le dossier doit d'abord être en statut SCAN_TERMINE.");
+        }
+
+        demande.setStatut(StatutDemande.VISA_APPROUVE);
+        demande = demandeVisaRepository.save(demande);
+
+        return toResponseDTO(demande);
+    }
+
+    // =============================================
     // Validation stricte
     // =============================================
     private void validerDemande(DemandeVisa demande) {
@@ -307,13 +325,27 @@ public class DemandeVisaService {
 
     private DemandeVisaResponseDTO toResponseDTO(DemandeVisa demande) {
         List<DemandeVisaResponseDTO.PieceResponseDTO> piecesResponse = demande.getPieces().stream()
-                .map(dp -> DemandeVisaResponseDTO.PieceResponseDTO.builder()
+                .map(dp -> {
+                    List<DemandeVisaResponseDTO.ScanDocumentResponseDTO> docs = new ArrayList<>();
+                    if (dp.getDocuments() != null) {
+                        docs = dp.getDocuments().stream().map(doc -> DemandeVisaResponseDTO.ScanDocumentResponseDTO.builder()
+                                .id(doc.getId())
+                                .nomOriginal(doc.getNomOriginal())
+                                .typeDocument(doc.getTypeDocument())
+                                .tailleOctets(doc.getTailleOctets())
+                                .dateUpload(doc.getDateUpload())
+                                .build()).collect(Collectors.toList());
+                    }
+                    return DemandeVisaResponseDTO.PieceResponseDTO.builder()
+                        .demandePieceId(dp.getId())
                         .pieceId(dp.getPiece().getId())
                         .nomPiece(dp.getPiece().getNom())
                         .typePiece(dp.getPiece().getTypePiece().name())
                         .obligatoire(dp.getPiece().getObligatoire())
                         .fourni(dp.getFourni())
-                        .build())
+                        .documents(docs)
+                        .build();
+                })
                 .collect(Collectors.toList());
 
         return DemandeVisaResponseDTO.builder()

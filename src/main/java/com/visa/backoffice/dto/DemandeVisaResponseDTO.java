@@ -48,10 +48,25 @@ public class DemandeVisaResponseDTO {
     @AllArgsConstructor
     @Builder
     public static class PieceResponseDTO {
+        private Long demandePieceId;
         private Long pieceId;
         private String nomPiece;
         private String typePiece;
         private Boolean obligatoire;
         private Boolean fourni;
+        private List<ScanDocumentResponseDTO> documents;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ScanDocumentResponseDTO {
+        private Long id;
+        private String nomOriginal;
+        private String typeDocument;
+        private Long tailleOctets;
+        private java.time.LocalDateTime dateUpload;
     }
 }
