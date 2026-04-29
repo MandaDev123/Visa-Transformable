@@ -201,6 +201,20 @@ public class DemandeViewController {
     }
 
     /**
+     * Approuver la demande
+     */
+    @PostMapping("/{id}/approuver")
+    public String approuverDemande(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            demandeVisaService.approuverDemande(id);
+            redirectAttributes.addFlashAttribute("success", "La demande a été approuvée avec succès.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/demandes/" + id;
+    }
+
+    /**
      * Page d'accueil → redirige vers la liste
      */
     @GetMapping("/")

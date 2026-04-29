@@ -54,13 +54,22 @@
                         <input type="hidden" name="categorie" value="TRANSFERT_DE_VISA">
                         <button type="submit" class="btn btn-secondary">🔄 Faire un Transfert</button>
                     </form>
-                    <form th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE'}"
+                    <form th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE' and allFournies}"
                         th:action="@{'/demandes/' + ${demande.id} + '/terminer-scan'}" method="post"
                         style="display:inline;">
                         <button type="submit" class="btn"
                             style="background: var(--accent-warning); color: white; border: none;"
                             onclick="return confirm('Terminer le scan ? (Action irréversible)');">
                             🛑 Arrêter le Scan
+                        </button>
+                    </form>
+                    <form th:if="${demande.statut != null and demande.statut.name() == 'SCAN_TERMINE'}"
+                        th:action="@{'/demandes/' + ${demande.id} + '/approuver'}" method="post"
+                        style="display:inline;">
+                        <button type="submit" class="btn"
+                            style="background: var(--accent-success); color: white; border: none;"
+                            onclick="return confirm('Approuver cette demande ? (Action irréversible)');">
+                            ✅ Approuver
                         </button>
                     </form>
                     <a th:if="${demande.statut != null and (demande.statut.name() == 'DOSSIER_CREE' or demande.statut.name() == 'SCAN_TERMINE' or demande.statut.name() == 'VISA_APPROUVE')}"
@@ -229,17 +238,31 @@
                         </div>
 
                         <div class="piece-status-list">
-                            <div class="piece-status-item" th:each="piece : ${demande.pieces}">
-                                <div
-                                    th:class="'piece-status-icon ' + ${piece.fourni == true ? 'fourni' : 'non-fourni'}">
-                                    <span th:text="'✓'"></span>
-                                </div>
-                                <div class="piece-status-info">
-                                    <div class="name" th:text="${piece.nomPiece}"></div>
-                                    <div class="type">
-                                        <span th:text="${piece.typePiece}"></span>
-                                        <span th:if="${piece.obligatoire}"> · Obligatoire</span>
-                                        <span th:if="${!piece.obligatoire}"> · Optionnel</span>
+                            <div class="piece-status-item" th:each="piece : ${demande.pieces}" th:if="${piece.fourni == true}" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                                <div style="display: flex; align-items: flex-start; gap: 15px;">
+                                    <div class="piece-status-icon fourni">
+                                        <span>✓</span>
+                                    </div>
+                                    <div class="piece-status-info" style="flex: 1;">
+                                        <div class="name" th:text="${piece.nomPiece}"></div>
+                                        <div class="type">
+                                            <span th:text="${piece.typePiece}"></span>
+                                            <span th:if="${piece.obligatoire}"> · Obligatoire</span>
+                                            <span th:if="${!piece.obligatoire}"> · Optionnel</span>
+                                        </div>
+
+                                        <!-- Liste des documents attachés à cette pièce (read-only) -->
+                                        <div th:if="${piece.documents != null and !piece.documents.isEmpty()}" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                            <div th:each="doc : ${piece.documents}" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                                    <span>📎</span>
+                                                    <span style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${doc.nomOriginal}"></span>
+                                                </div>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a th:href="@{'/demandes/' + ${demande.id} + '/documents/' + ${doc.id} + '/telecharger'}" target="_blank" class="btn btn-sm btn-secondary" style="padding: 2px 8px; font-size: 0.8rem;">Voir le fichier</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
