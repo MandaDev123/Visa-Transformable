@@ -47,4 +47,32 @@ public class DemandeVisaController {
         DemandeVisaResponseDTO response = demandeVisaService.getDemande(id);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * GET /api/demandes/search?numero={numero}
+     * Rechercher par numéro de visa ou carte résident
+     */
+    @GetMapping("/search")
+    public ResponseEntity<java.util.List<DemandeVisaResponseDTO>> rechercherParNumero(@RequestParam("numero") String numero) {
+        return ResponseEntity.ok(demandeVisaService.rechercherParNumero(numero));
+    }
+
+    /**
+     * GET /api/demandes/{id}/pdf
+     * Générer l'attestation de récépissé PDF
+     */
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> genererPdf(@PathVariable("id") Long id,
+                                             @org.springframework.beans.factory.annotation.Autowired com.visa.backoffice.service.PdfService pdfService) {
+        DemandeVisaResponseDTO demande = demandeVisaService.getDemande(id);
+        
+        byte[] pdf = pdfService.generateAttestationRecepisse(demande);
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("filename", "attestation_" + demande.getId() + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
 }
