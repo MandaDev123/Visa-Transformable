@@ -380,32 +380,65 @@
                         </div>
                     </div>
 
-                    <!-- Pieces for edit mode -->
-                    <div class="card" style="margin-bottom: 1.5rem;"
-                        th:if="${demandeResponse.pieces != null and !demandeResponse.pieces.isEmpty()}">
-                        <div class="card-header">
-                            <h2>📎 Pièces Justificatives</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="piece-grid">
-                                <label class="piece-item" th:each="piece, iter : ${demandeResponse.pieces}">
-                                    <input type="hidden" th:name="'pieces[' + ${iter.index} + '].pieceId'"
-                                        th:value="${piece.pieceId}">
-                                    <input type="checkbox" th:name="'pieces[' + ${iter.index} + '].fourni'"
-                                        th:value="true" th:checked="${piece.fourni}">
-                                    <span class="piece-label" th:text="${piece.nomPiece}">Nom de la pièce</span>
-                                    <span class="piece-tag obligatoire" th:if="${piece.obligatoire}">Obligatoire</span>
-                                    <span class="piece-tag optionnel" th:if="${!piece.obligatoire}">Optionnel</span>
-                                </label>
+                    <div class="form-actions">
+                        <a th:href="@{'/demandes/' + ${demandeResponse.id}}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-success">💾 Sauvegarder les informations</button>
+                    </div>
+                </form>
+
+                <!-- Pieces for edit mode (upload de fichiers) -->
+                <div class="card" style="margin-top: 2rem; margin-bottom: 1.5rem;"
+                    th:if="${demandeResponse != null and demandeResponse.id != null and demandeResponse.pieces != null and !demandeResponse.pieces.isEmpty()}">
+                    <div class="card-header">
+                        <h2>📎 Fichiers Justificatifs (Upload)</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Uploadez les documents pour chaque pièce requise. L'enregistrement se fait automatiquement.</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="piece-status-list">
+                            <div class="piece-status-item" th:each="piece : ${demandeResponse.pieces}" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                                <div style="display: flex; align-items: flex-start; gap: 15px;">
+                                    <div th:class="'piece-status-icon ' + ${piece.fourni == true ? 'fourni' : 'non-fourni'}">
+                                        <span th:text="${piece.fourni == true ? '✓' : '✗'}"></span>
+                                    </div>
+                                    <div class="piece-status-info" style="flex: 1;">
+                                        <div class="name" th:text="${piece.nomPiece}"></div>
+                                        <div class="type">
+                                            <span th:text="${piece.typePiece}"></span>
+                                            <span th:if="${piece.obligatoire}"> · Obligatoire</span>
+                                            <span th:if="${!piece.obligatoire}"> · Optionnel</span>
+                                        </div>
+
+                                        <!-- Liste des documents attachés -->
+                                        <div th:if="${piece.documents != null and !piece.documents.isEmpty()}" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                            <div th:each="doc : ${piece.documents}" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                                    <span>📎</span>
+                                                    <span style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${doc.nomOriginal}"></span>
+                                                </div>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a th:href="@{'/demandes/' + ${demandeResponse.id} + '/documents/' + ${doc.id} + '/telecharger'}" target="_blank" class="btn btn-sm btn-secondary" style="padding: 2px 8px; font-size: 0.8rem;">Voir</a>
+                                                    <form th:action="@{'/demandes/' + ${demandeResponse.id} + '/documents/' + ${doc.id} + '/supprimer'}"
+                                                          method="post" style="display:inline;" onsubmit="return confirm('Supprimer ce fichier ?')">
+                                                        <button type="submit" class="btn btn-sm" style="padding: 2px 8px; font-size: 0.8rem; background: rgba(231,76,60,0.1); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3);">Sup.</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Formulaire d'upload -->
+                                        <div style="margin-top: 10px;">
+                                            <form th:action="@{'/demandes/' + ${demandeResponse.id} + '/pieces/' + ${piece.demandePieceId} + '/documents/upload'}" method="post" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+                                                <input type="file" name="fichier" accept="image/*,application/pdf" required class="form-control" style="font-size: 0.8rem; padding: 4px; max-width: 250px;">
+                                                <input type="hidden" name="typeDocument" th:value="${piece.typePiece}">
+                                                <button type="submit" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.8rem;">📤 Ajouter un fichier</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="form-actions">
-                        <a th:href="@{'/demandes/' + ${demandeResponse.id}}" class="btn btn-secondary">Annuler</a>
-                        <button type="submit" class="btn btn-success">💾 Sauvegarder les modifications</button>
-                    </div>
-                </form>
+                </div>
         </main>
 
         <footer class="footer">
