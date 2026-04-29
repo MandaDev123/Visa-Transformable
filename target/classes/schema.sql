@@ -5,20 +5,41 @@
 
 CREATE DATABASE visa_backoffice;
 
+\c visa_backoffice
+-- Drop existing tables to apply new schema
+-- DROP TABLE IF EXISTS demande_piece CASCADE;
+-- DROP TABLE IF EXISTS piece_justificative CASCADE;
+-- DROP TABLE IF EXISTS demande_visa CASCADE;
+
 CREATE TABLE IF NOT EXISTS demande_visa (
     id SERIAL PRIMARY KEY,
     date_demande DATE NOT NULL,
     categorie VARCHAR(50),
-    statut VARCHAR(50) DEFAULT 'BROUILLON',
-    nom VARCHAR(100),
-    prenoms VARCHAR(100),
+    statut VARCHAR(50) DEFAULT 'DOSSIER_CREE',
+
+    nom VARCHAR(100) NOT NULL,
+    prenoms VARCHAR(100) NOT NULL,
+    date_naissance DATE,
+    lieu_naissance VARCHAR(150),
+    nationalite VARCHAR(100),
+    email VARCHAR(150),
+    contact VARCHAR(50),
+
     numero_passeport VARCHAR(50) NOT NULL,
-    type_visa VARCHAR(50)
+    date_delivrance_passeport DATE,
+    date_expiration_passeport DATE,
+
+    type_visa VARCHAR(50),
+    date_entree_madagascar DATE,
+    lieu_reference_visa VARCHAR(150),
+    numero_visa VARCHAR(50),
+    numero_carte_resident VARCHAR(50),
+    date_expiration_visa DATE
 );
 
 CREATE TABLE IF NOT EXISTS piece_justificative (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100),
+    nom VARCHAR(255),
     type_piece VARCHAR(50),
     obligatoire BOOLEAN DEFAULT FALSE,
     type_visa VARCHAR(50)
