@@ -17,10 +17,29 @@ public class DemandeVisaResponseDTO {
     private LocalDate dateDemande;
     private String categorie;
     private StatutDemande statut;
+
+    // État Civil
     private String nom;
     private String prenoms;
+    private LocalDate dateNaissance;
+    private String lieuNaissance;
+    private String nationalite;
+    private String email;
+    private String contact;
+
+    // Passeport
     private String numeroPasseport;
+    private LocalDate dateDelivrancePasseport;
+    private LocalDate dateExpirationPasseport;
+
+    // Visa Transformable
     private String typeVisa;
+    private LocalDate dateEntreeMadagascar;
+    private String lieuReferenceVisa;
+    private String numeroVisa;
+    private String numeroCarteResident;
+    private LocalDate dateExpirationVisa;
+
     private List<PieceResponseDTO> pieces;
 
     @Getter

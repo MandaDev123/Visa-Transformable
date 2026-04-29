@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-wrapper">
         <!-- Navbar -->
@@ -44,10 +46,10 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon yellow">📝</div>
+                    <div class="stat-icon yellow">🖨️</div>
                     <div class="stat-info">
-                        <h3 th:text="${totalBrouillons}">0</h3>
-                        <p>Brouillons</p>
+                        <h3 th:text="${totalScanTermines}">0</h3>
+                        <p>Scans Terminés</p>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -56,6 +58,30 @@
                         <h3 th:text="${totalDossiersCrees}">0</h3>
                         <p>Dossiers Créés</p>
                     </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71;">⭐</div>
+                    <div class="stat-info">
+                        <h3 th:text="${totalVisaApprouve}">0</h3>
+                        <p>Visas Approuvés</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search for Duplicata / Transfert -->
+            <div class="card" style="margin-bottom: 1.5rem; background-color: var(--bg-secondary);">
+                <div class="card-header">
+                    <h2>🔍 Recherche d'antécédent</h2>
+                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">Pour créer un
+                        Duplicata ou un Transfert de Visa</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/demandes/rechercher-antecedent}" method="post"
+                        style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" name="numero" class="form-control"
+                            placeholder="Numéro de visa ou de carte résident" style="max-width: 300px;" required>
+                        <button type="submit" class="btn btn-primary">Rechercher</button>
+                    </form>
                 </div>
             </div>
 
@@ -89,9 +115,9 @@
                                 <th>#</th>
                                 <th>Date</th>
                                 <th>Nom Complet</th>
+                                <th>Catégorie</th>
                                 <th>N° Passeport</th>
                                 <th>Type Visa</th>
-                                <th>Catégorie</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
@@ -103,29 +129,60 @@
                                 <td>
                                     <span th:text="${demande.nom != null ? demande.nom : ''}"></span>
                                     <span th:if="${demande.prenoms != null}" th:text="' ' + ${demande.prenoms}"></span>
-                                    <span th:if="${demande.nom == null and demande.prenoms == null}" style="color: var(--text-muted);">—</span>
+                                    <span th:if="${demande.nom == null and demande.prenoms == null}"
+                                        style="color: var(--text-muted);">—</span>
                                 </td>
                                 <td>
-                                    <code style="background: var(--bg-primary); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;"
-                                          th:text="${demande.numeroPasseport}"></code>
+                                    <span th:if="${demande.categorie == 'NOUVEAU_TITRE'}">Nouveau Titre</span>
+                                    <span th:if="${demande.categorie == 'DUPLICATA'}">Duplicata</span>
+                                    <span th:if="${demande.categorie == 'TRANSFERT_DE_VISA'}">Transfert Visa</span>
+                                    <span th:if="${demande.categorie == null}">—</span>
+                                </td>
+                                <td>
+                                    <code
+                                        style="background: var(--bg-primary); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;"
+                                        th:text="${demande.numeroPasseport}"></code>
                                 </td>
                                 <td th:text="${demande.typeVisa != null ? demande.typeVisa : '—'}"></td>
-                                <td th:text="${demande.categorie != null ? demande.categorie : '—'}"></td>
                                 <td>
-                                    <span th:if="${demande.statut != null and demande.statut.name() == 'BROUILLON'}"
-                                          class="badge badge-brouillon">
-                                        <span class="badge-dot"></span> Brouillon
+                                    <span th:if="${demande.statut != null and demande.statut.name() == 'SCAN_TERMINE'}"
+                                        class="badge"
+                                        style="background: rgba(241, 196, 15, 0.15); color: #f39c12; border: 1px solid rgba(241, 196, 15, 0.3);">
+                                        <span class="badge-dot" style="background: #f39c12;"></span> Scan Terminé
                                     </span>
                                     <span th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE'}"
-                                          class="badge badge-dossier-cree">
+                                        class="badge badge-dossier-cree">
                                         <span class="badge-dot"></span> Dossier Créé
+                                    </span>
+                                    <span th:if="${demande.statut != null and demande.statut.name() == 'VISA_APPROUVE'}"
+                                        class="badge badge-dossier-cree"
+                                        style="background: rgba(46, 204, 113, 0.15); color: #27ae60; border: 1px solid rgba(46, 204, 113, 0.3);">
+                                        <span class="badge-dot" style="background: #27ae60;"></span> Approuvé
                                     </span>
                                     <span th:if="${demande.statut == null}" style="color: var(--text-muted);">—</span>
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 6px;">
-                                        <a th:href="@{'/demandes/' + ${demande.id}}" class="btn btn-sm btn-secondary">👁 Voir</a>
-                                        <a th:href="@{'/demandes/' + ${demande.id} + '/modifier'}" class="btn btn-sm btn-primary">✏️ Modifier</a>
+                                        <a th:href="@{'/demandes/' + ${demande.id}}"
+                                            class="btn btn-sm btn-secondary">👁</a>
+                                        <a th:if="${demande.statut != null and demande.statut.name() != 'SCAN_TERMINE' and demande.statut.name() != 'VISA_APPROUVE'}"
+                                            th:href="@{'/demandes/' + ${demande.id} + '/modifier'}"
+                                            class="btn btn-sm btn-primary">✏️</a>
+                                        <form
+                                            th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE'}"
+                                            th:action="@{'/demandes/' + ${demande.id} + '/terminer-scan'}" method="post"
+                                            style="display:inline;">
+                                            <button type="submit" class="btn btn-sm"
+                                                style="background: var(--accent-warning); color: white; border: none;"
+                                                title="Arrêter le scan"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir terminer le scan ? Vous ne pourrez plus modifier cette demande.');">🛑
+                                                Scan Terminé</button>
+                                        </form>
+                                        <a th:if="${demande.statut != null and (demande.statut.name() == 'DOSSIER_CREE' or demande.statut.name() == 'SCAN_TERMINE' or demande.statut.name() == 'VISA_APPROUVE')}"
+                                            th:href="@{'/api/demandes/' + ${demande.id} + '/pdf'}" target="_blank"
+                                            class="btn btn-sm"
+                                            style="background: var(--accent-info); color: white; border: none;"
+                                            title="Imprimer Récépissé">🖨️</a>
                                     </div>
                                 </td>
                             </tr>
@@ -140,4 +197,5 @@
         </footer>
     </div>
 </body>
+
 </html>

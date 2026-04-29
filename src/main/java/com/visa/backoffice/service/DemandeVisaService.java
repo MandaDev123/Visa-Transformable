@@ -28,11 +28,26 @@ public class DemandeVisaService {
         DemandeVisa demande = DemandeVisa.builder()
                 .dateDemande(dto.getDateDemande())
                 .categorie(dto.getCategorie())
+                // État civil
                 .nom(dto.getNom())
                 .prenoms(dto.getPrenoms())
+                .dateNaissance(dto.getDateNaissance())
+                .lieuNaissance(dto.getLieuNaissance())
+                .nationalite(dto.getNationalite())
+                .email(dto.getEmail())
+                .contact(dto.getContact())
+                // Passeport
                 .numeroPasseport(dto.getNumeroPasseport())
+                .dateDelivrancePasseport(dto.getDateDelivrancePasseport())
+                .dateExpirationPasseport(dto.getDateExpirationPasseport())
+                // Visa transformable
                 .typeVisa(dto.getTypeVisa())
-                .statut(StatutDemande.BROUILLON)
+                .dateEntreeMadagascar(dto.getDateEntreeMadagascar())
+                .lieuReferenceVisa(dto.getLieuReferenceVisa())
+                .numeroVisa(dto.getNumeroVisa())
+                .numeroCarteResident(dto.getNumeroCarteResident())
+                .dateExpirationVisa(dto.getDateExpirationVisa())
+                .statut(StatutDemande.DOSSIER_CREE)
                 .build();
 
         demande = demandeVisaRepository.save(demande);
@@ -42,8 +57,11 @@ public class DemandeVisaService {
             initialiserPieces(demande, dto.getPieces());
         }
 
-        // Recalculer le statut
-        demande.setStatut(calculerStatut(demande));
+        // Valider les champs obligatoires et pièces
+        validerDemande(demande);
+
+        // Définir le statut initial
+        demande.setStatut(calculerStatutInitial(demande));
         demande = demandeVisaRepository.save(demande);
 
         return toResponseDTO(demande);
@@ -58,20 +76,65 @@ public class DemandeVisaService {
                 .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée avec l'id : " + id));
 
         // Mettre à jour les champs
-        if (dto.getDateDemande() != null) demande.setDateDemande(dto.getDateDemande());
-        if (dto.getCategorie() != null) demande.setCategorie(dto.getCategorie());
-        if (dto.getNom() != null) demande.setNom(dto.getNom());
-        if (dto.getPrenoms() != null) demande.setPrenoms(dto.getPrenoms());
-        if (dto.getNumeroPasseport() != null) demande.setNumeroPasseport(dto.getNumeroPasseport());
-        if (dto.getTypeVisa() != null) demande.setTypeVisa(dto.getTypeVisa());
+        if (dto.getDateDemande() != null)
+            demande.setDateDemande(dto.getDateDemande());
+        if (dto.getCategorie() != null)
+            demande.setCategorie(dto.getCategorie());
+        // État civil
+        if (dto.getNom() != null)
+            demande.setNom(dto.getNom());
+        if (dto.getPrenoms() != null)
+            demande.setPrenoms(dto.getPrenoms());
+        if (dto.getDateNaissance() != null)
+            demande.setDateNaissance(dto.getDateNaissance());
+        if (dto.getLieuNaissance() != null)
+            demande.setLieuNaissance(dto.getLieuNaissance());
+        if (dto.getNationalite() != null)
+            demande.setNationalite(dto.getNationalite());
+        if (dto.getEmail() != null)
+            demande.setEmail(dto.getEmail());
+        if (dto.getContact() != null)
+            demande.setContact(dto.getContact());
+
+        // Passeport
+        if (dto.getNumeroPasseport() != null)
+            demande.setNumeroPasseport(dto.getNumeroPasseport());
+        if (dto.getDateDelivrancePasseport() != null)
+            demande.setDateDelivrancePasseport(dto.getDateDelivrancePasseport());
+        if (dto.getDateExpirationPasseport() != null)
+            demande.setDateExpirationPasseport(dto.getDateExpirationPasseport());
+
+        // Visa transformable
+        if (dto.getTypeVisa() != null)
+            demande.setTypeVisa(dto.getTypeVisa());
+        if (dto.getDateEntreeMadagascar() != null)
+            demande.setDateEntreeMadagascar(dto.getDateEntreeMadagascar());
+        if (dto.getLieuReferenceVisa() != null)
+            demande.setLieuReferenceVisa(dto.getLieuReferenceVisa());
+        if (dto.getNumeroVisa() != null)
+            demande.setNumeroVisa(dto.getNumeroVisa());
+        if (dto.getNumeroCarteResident() != null)
+            demande.setNumeroCarteResident(dto.getNumeroCarteResident());
+        if (dto.getDateExpirationVisa() != null)
+            demande.setDateExpirationVisa(dto.getDateExpirationVisa());
 
         // Mettre à jour les pièces
         if (dto.getPieces() != null) {
             mettreAJourPieces(demande, dto.getPieces());
         }
 
-        // Recalculer le statut
-        demande.setStatut(calculerStatut(demande));
+        if (demande.getStatut() == StatutDemande.SCAN_TERMINE) {
+            throw new IllegalStateException("La demande est au statut SCAN TERMINÉ et ne peut plus être modifiée.");
+        }
+
+        // Valider les champs obligatoires et pièces
+        validerDemande(demande);
+
+        // Recalculer le statut si ce n'est pas VISA_APPROUVE (au cas où ça aurait été
+        // modifié, mais normalement pas besoin)
+        if (demande.getStatut() != StatutDemande.VISA_APPROUVE) {
+            demande.setStatut(calculerStatutInitial(demande));
+        }
         demande = demandeVisaRepository.save(demande);
 
         return toResponseDTO(demande);
@@ -88,6 +151,15 @@ public class DemandeVisaService {
     }
 
     // =============================================
+    // Rechercher par numéro de visa ou carte résident
+    // =============================================
+    @Transactional(readOnly = true)
+    public List<DemandeVisaResponseDTO> rechercherParNumero(String numero) {
+        List<DemandeVisa> demandes = demandeVisaRepository.findHistoriqueByNumero(numero);
+        return demandes.stream().map(this::toResponseDTO).collect(Collectors.toList());
+    }
+
+    // =============================================
     // Vérification des pièces (logique métier du spec)
     // =============================================
     public boolean verifierPieces(DemandeVisa demande) {
@@ -95,33 +167,101 @@ public class DemandeVisaService {
             return false;
         }
 
-        List<PieceJustificative> piecesObligatoires =
-                pieceJustificativeRepository.findPiecesObligatoires(demande.getTypeVisa());
+        List<PieceJustificative> piecesObligatoires = pieceJustificativeRepository
+                .findPiecesObligatoires(demande.getTypeVisa());
 
         List<DemandePiece> piecesFournies = demande.getPieces();
 
         for (PieceJustificative p : piecesObligatoires) {
             boolean trouve = piecesFournies.stream()
-                    .anyMatch(dp ->
-                            dp.getPiece().getId().equals(p.getId())
-                            && Boolean.TRUE.equals(dp.getFourni())
-                    );
-            if (!trouve) return false;
+                    .anyMatch(dp -> dp.getPiece().getId().equals(p.getId())
+                            && Boolean.TRUE.equals(dp.getFourni()));
+            if (!trouve)
+                return false;
         }
 
         return true;
     }
 
     // =============================================
-    // Calculer le statut automatiquement
+    // Terminer le scan (attacher toutes les pièces)
     // =============================================
-    private StatutDemande calculerStatut(DemandeVisa demande) {
-        // Champs obligatoires
-        if (demande.getDateDemande() == null) return StatutDemande.BROUILLON;
-        if (demande.getNumeroPasseport() == null || demande.getNumeroPasseport().isBlank()) return StatutDemande.BROUILLON;
+    @Transactional
+    public DemandeVisaResponseDTO terminerScan(Long id) {
+        DemandeVisa demande = demandeVisaRepository.findByIdWithPieces(id)
+                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée avec l'id : " + id));
 
-        // Vérification des pièces
-        if (!verifierPieces(demande)) return StatutDemande.BROUILLON;
+        // Vérifier que TOUTES les pièces (obligatoires ET optionnelles) sont fournies
+        boolean allPiecesFournies = demande.getPieces().stream()
+                .allMatch(dp -> Boolean.TRUE.equals(dp.getFourni()));
+
+        if (!allPiecesFournies) {
+            throw new IllegalArgumentException(
+                    "Impossible de terminer le scan : toutes les pièces (obligatoires et optionnelles) doivent être fournies.");
+        }
+
+        demande.setStatut(StatutDemande.SCAN_TERMINE);
+        demande = demandeVisaRepository.save(demande);
+
+        return toResponseDTO(demande);
+    }
+
+    // =============================================
+    // Validation stricte
+    // =============================================
+    private void validerDemande(DemandeVisa demande) {
+        // Champs obligatoires - État civil
+        if (demande.getDateDemande() == null)
+            throw new IllegalArgumentException("Date demande requise");
+        if (isBlank(demande.getNom()))
+            throw new IllegalArgumentException("Nom requis");
+        if (isBlank(demande.getPrenoms()))
+            throw new IllegalArgumentException("Prénoms requis");
+        if (demande.getDateNaissance() == null)
+            throw new IllegalArgumentException("Date naissance requise");
+        if (isBlank(demande.getLieuNaissance()))
+            throw new IllegalArgumentException("Lieu naissance requis");
+        if (isBlank(demande.getNationalite()))
+            throw new IllegalArgumentException("Nationalité requise");
+        if (isBlank(demande.getEmail()))
+            throw new IllegalArgumentException("Email requis");
+        if (isBlank(demande.getContact()))
+            throw new IllegalArgumentException("Contact requis");
+
+        // Champs obligatoires - Passeport
+        if (isBlank(demande.getNumeroPasseport()))
+            throw new IllegalArgumentException("Numéro passeport requis");
+        if (demande.getDateDelivrancePasseport() == null)
+            throw new IllegalArgumentException("Date délivrance passeport requise");
+        if (demande.getDateExpirationPasseport() == null)
+            throw new IllegalArgumentException("Date expiration passeport requise");
+
+        // Champs obligatoires - Visa transformable
+        if (isBlank(demande.getTypeVisa()))
+            throw new IllegalArgumentException("Type visa requis");
+        if (demande.getDateEntreeMadagascar() == null)
+            throw new IllegalArgumentException("Date entrée Madagascar requise");
+        if (isBlank(demande.getLieuReferenceVisa()))
+            throw new IllegalArgumentException("Lieu référence visa requis");
+        if (demande.getDateExpirationVisa() == null)
+            throw new IllegalArgumentException("Date expiration visa requise");
+
+        // Vérification des pièces obligatoires
+        if (!verifierPieces(demande)) {
+            throw new IllegalArgumentException("Les pièces justificatives obligatoires doivent toutes être cochées.");
+        }
+    }
+
+    private StatutDemande calculerStatutInitial(DemandeVisa demande) {
+        // "Si on tape son numéro et que ses données n'existent pas dans notre base
+        // alors il refait une demande comme au début mais avec une catégorie duplicata
+        // ou transfert de visa ,et son statut sera directement VISA APPROUVÉ."
+        // We will assume that if the category is DUPLICATA or TRANSFERT_DE_VISA, it
+        // goes to VISA_APPROUVE directly when complete.
+        if ("DUPLICATA".equalsIgnoreCase(demande.getCategorie())
+                || "TRANSFERT_DE_VISA".equalsIgnoreCase(demande.getCategorie())) {
+            return StatutDemande.VISA_APPROUVE;
+        }
 
         return StatutDemande.DOSSIER_CREE;
     }
@@ -130,9 +270,13 @@ public class DemandeVisaService {
     // Helpers
     // =============================================
 
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
     private void initialiserPieces(DemandeVisa demande, List<DemandePieceDTO> piecesDTO) {
-        List<PieceJustificative> piecesApplicables =
-                pieceJustificativeRepository.findPiecesApplicables(demande.getTypeVisa());
+        List<PieceJustificative> piecesApplicables = pieceJustificativeRepository
+                .findPiecesApplicables(demande.getTypeVisa());
 
         List<DemandePiece> demandePieces = new ArrayList<>();
         for (PieceJustificative piece : piecesApplicables) {
@@ -177,10 +321,25 @@ public class DemandeVisaService {
                 .dateDemande(demande.getDateDemande())
                 .categorie(demande.getCategorie())
                 .statut(demande.getStatut())
+                // État civil
                 .nom(demande.getNom())
                 .prenoms(demande.getPrenoms())
+                .dateNaissance(demande.getDateNaissance())
+                .lieuNaissance(demande.getLieuNaissance())
+                .nationalite(demande.getNationalite())
+                .email(demande.getEmail())
+                .contact(demande.getContact())
+                // Passeport
                 .numeroPasseport(demande.getNumeroPasseport())
+                .dateDelivrancePasseport(demande.getDateDelivrancePasseport())
+                .dateExpirationPasseport(demande.getDateExpirationPasseport())
+                // Visa transformable
                 .typeVisa(demande.getTypeVisa())
+                .dateEntreeMadagascar(demande.getDateEntreeMadagascar())
+                .lieuReferenceVisa(demande.getLieuReferenceVisa())
+                .numeroVisa(demande.getNumeroVisa())
+                .numeroCarteResident(demande.getNumeroCarteResident())
+                .dateExpirationVisa(demande.getDateExpirationVisa())
                 .pieces(piecesResponse)
                 .build();
     }
