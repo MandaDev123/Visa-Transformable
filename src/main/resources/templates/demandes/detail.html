@@ -54,13 +54,22 @@
                         <input type="hidden" name="categorie" value="TRANSFERT_DE_VISA">
                         <button type="submit" class="btn btn-secondary">🔄 Faire un Transfert</button>
                     </form>
-                    <form th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE'}"
+                    <form th:if="${demande.statut != null and demande.statut.name() == 'DOSSIER_CREE' and allFournies}"
                         th:action="@{'/demandes/' + ${demande.id} + '/terminer-scan'}" method="post"
                         style="display:inline;">
                         <button type="submit" class="btn"
                             style="background: var(--accent-warning); color: white; border: none;"
                             onclick="return confirm('Terminer le scan ? (Action irréversible)');">
                             🛑 Arrêter le Scan
+                        </button>
+                    </form>
+                    <form th:if="${demande.statut != null and demande.statut.name() == 'SCAN_TERMINE'}"
+                        th:action="@{'/demandes/' + ${demande.id} + '/approuver'}" method="post"
+                        style="display:inline;">
+                        <button type="submit" class="btn"
+                            style="background: var(--accent-success); color: white; border: none;"
+                            onclick="return confirm('Approuver cette demande ? (Action irréversible)');">
+                            ✅ Approuver
                         </button>
                     </form>
                     <a th:if="${demande.statut != null and (demande.statut.name() == 'DOSSIER_CREE' or demande.statut.name() == 'SCAN_TERMINE' or demande.statut.name() == 'VISA_APPROUVE')}"
@@ -229,17 +238,31 @@
                         </div>
 
                         <div class="piece-status-list">
-                            <div class="piece-status-item" th:each="piece : ${demande.pieces}">
-                                <div
-                                    th:class="'piece-status-icon ' + ${piece.fourni == true ? 'fourni' : 'non-fourni'}">
-                                    <span th:text="'✓'"></span>
-                                </div>
-                                <div class="piece-status-info">
-                                    <div class="name" th:text="${piece.nomPiece}"></div>
-                                    <div class="type">
-                                        <span th:text="${piece.typePiece}"></span>
-                                        <span th:if="${piece.obligatoire}"> · Obligatoire</span>
-                                        <span th:if="${!piece.obligatoire}"> · Optionnel</span>
+                            <div class="piece-status-item" th:each="piece : ${demande.pieces}" th:if="${piece.fourni == true}" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+                                <div style="display: flex; align-items: flex-start; gap: 15px;">
+                                    <div class="piece-status-icon fourni">
+                                        <span>✓</span>
+                                    </div>
+                                    <div class="piece-status-info" style="flex: 1;">
+                                        <div class="name" th:text="${piece.nomPiece}"></div>
+                                        <div class="type">
+                                            <span th:text="${piece.typePiece}"></span>
+                                            <span th:if="${piece.obligatoire}"> · Obligatoire</span>
+                                            <span th:if="${!piece.obligatoire}"> · Optionnel</span>
+                                        </div>
+
+                                        <!-- Liste des documents attachés à cette pièce (read-only) -->
+                                        <div th:if="${piece.documents != null and !piece.documents.isEmpty()}" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                            <div th:each="doc : ${piece.documents}" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                                    <span>📎</span>
+                                                    <span style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${doc.nomOriginal}"></span>
+                                                </div>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a th:href="@{'/demandes/' + ${demande.id} + '/documents/' + ${doc.id} + '/telecharger'}" target="_blank" class="btn btn-sm btn-secondary" style="padding: 2px 8px; font-size: 0.8rem;">Voir le fichier</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -247,6 +270,63 @@
                     </div>
                 </div>
         </main>
+
+        <!-- ============================================================
+             Section Délivrance (visible seulement si VISA_APPROUVE)
+        ============================================================= -->
+        <section th:if="${demande.statut != null and demande.statut.name() == 'VISA_APPROUVE'}"
+                 style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-top: 2px solid #22c55e; padding: 2rem;">
+            <div style="max-width: 95%; margin: 0 auto;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem;">
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg,#22c55e,#16a34a); border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">🎫</div>
+                    <div>
+                        <h2 style="font-size: 1.3rem; font-weight: 700; color: #f1f5f9;">Délivrance des Documents Officiels</h2>
+                        <p style="color: #94a3b8; font-size: 0.9rem;">La demande est approuvée. Vous pouvez imprimer le visa et la carte de résident.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <!-- Visa -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/visa-pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(30,64,175,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">🛂</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Imprimer le VISA</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Document officiel d'entrée</div>
+                        </div>
+                    </a>
+                    <!-- Carte Résident -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/carte-resident-pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(185,28,28,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">🪪</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Imprimer la Carte de Résident</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Titre de séjour officiel</div>
+                        </div>
+                    </a>
+                    <!-- Attestation de récépissé -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(13,148,136,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">📄</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Attestation de Récépissé</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Preuve de demande complète</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
         <footer class="footer">
             <p>© 2026 Visa Backoffice — Gestion des Demandes de Visa Transformable</p>
