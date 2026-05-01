@@ -68,5 +68,6 @@ public class DemandeVisaResponseDTO {
         private String typeDocument;
         private Long tailleOctets;
         private java.time.LocalDateTime dateUpload;
+        private String cheminFichier;
     }
 }
