@@ -27,4 +27,8 @@ public class DemandePiece {
     @Column
     @Builder.Default
     private Boolean fourni = false;
+
+    @OneToMany(mappedBy = "demandePiece", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<ScanDocument> documents = new java.util.ArrayList<>();
 }
