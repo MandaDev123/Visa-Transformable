@@ -271,6 +271,63 @@
                 </div>
         </main>
 
+        <!-- ============================================================
+             Section Délivrance (visible seulement si VISA_APPROUVE)
+        ============================================================= -->
+        <section th:if="${demande.statut != null and demande.statut.name() == 'VISA_APPROUVE'}"
+                 style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-top: 2px solid #22c55e; padding: 2rem;">
+            <div style="max-width: 95%; margin: 0 auto;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem;">
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg,#22c55e,#16a34a); border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">🎫</div>
+                    <div>
+                        <h2 style="font-size: 1.3rem; font-weight: 700; color: #f1f5f9;">Délivrance des Documents Officiels</h2>
+                        <p style="color: #94a3b8; font-size: 0.9rem;">La demande est approuvée. Vous pouvez imprimer le visa et la carte de résident.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <!-- Visa -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/visa-pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(30,64,175,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">🛂</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Imprimer le VISA</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Document officiel d'entrée</div>
+                        </div>
+                    </a>
+                    <!-- Carte Résident -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/carte-resident-pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(185,28,28,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">🪪</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Imprimer la Carte de Résident</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Titre de séjour officiel</div>
+                        </div>
+                    </a>
+                    <!-- Attestation de récépissé -->
+                    <a th:href="@{'/api/demandes/' + ${demande.id} + '/pdf'}" target="_blank"
+                       style="display: flex; align-items: center; gap: 12px; padding: 1.25rem 2rem;
+                              background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+                              border-radius: 12px; text-decoration: none; color: white;
+                              box-shadow: 0 4px 16px rgba(13,148,136,0.4); transition: all 0.3s;
+                              border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 2rem;">📄</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem;">Attestation de Récépissé</div>
+                            <div style="font-size: 0.78rem; opacity: 0.8;">Preuve de demande complète</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <footer class="footer">
             <p>© 2026 Visa Backoffice — Gestion des Demandes de Visa Transformable</p>
         </footer>

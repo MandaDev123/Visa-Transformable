@@ -65,14 +65,45 @@ public class DemandeVisaController {
     public ResponseEntity<byte[]> genererPdf(@PathVariable("id") Long id,
                                              @org.springframework.beans.factory.annotation.Autowired com.visa.backoffice.service.PdfService pdfService) {
         DemandeVisaResponseDTO demande = demandeVisaService.getDemande(id);
-        
         byte[] pdf = pdfService.generateAttestationRecepisse(demande);
-        
+        return buildPdfResponse(pdf, "attestation_" + id + ".pdf");
+    }
+
+    /**
+     * GET /api/demandes/{id}/visa-pdf
+     * Générer le visa officiel PDF (seulement si VISA_APPROUVE)
+     */
+    @GetMapping("/{id}/visa-pdf")
+    public ResponseEntity<byte[]> genererVisaPdf(@PathVariable("id") Long id,
+                                                  @org.springframework.beans.factory.annotation.Autowired com.visa.backoffice.service.PdfService pdfService) {
+        DemandeVisaResponseDTO demande = demandeVisaService.getDemande(id);
+        if (demande.getStatut() != com.visa.backoffice.entity.StatutDemande.VISA_APPROUVE) {
+            return ResponseEntity.status(403).build();
+        }
+        byte[] pdf = pdfService.generateVisa(demande);
+        return buildPdfResponse(pdf, "visa_" + id + ".pdf");
+    }
+
+    /**
+     * GET /api/demandes/{id}/carte-resident-pdf
+     * Générer la carte de résident PDF (seulement si VISA_APPROUVE)
+     */
+    @GetMapping("/{id}/carte-resident-pdf")
+    public ResponseEntity<byte[]> genererCarteResidentPdf(@PathVariable("id") Long id,
+                                                           @org.springframework.beans.factory.annotation.Autowired com.visa.backoffice.service.PdfService pdfService) {
+        DemandeVisaResponseDTO demande = demandeVisaService.getDemande(id);
+        if (demande.getStatut() != com.visa.backoffice.entity.StatutDemande.VISA_APPROUVE) {
+            return ResponseEntity.status(403).build();
+        }
+        byte[] pdf = pdfService.generateCarteResident(demande);
+        return buildPdfResponse(pdf, "carte_resident_" + id + ".pdf");
+    }
+
+    private ResponseEntity<byte[]> buildPdfResponse(byte[] pdf, String filename) {
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("filename", "attestation_" + demande.getId() + ".pdf");
+        headers.setContentDispositionFormData("inline", filename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 }

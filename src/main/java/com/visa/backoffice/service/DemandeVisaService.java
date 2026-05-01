@@ -334,6 +334,7 @@ public class DemandeVisaService {
                                 .typeDocument(doc.getTypeDocument())
                                 .tailleOctets(doc.getTailleOctets())
                                 .dateUpload(doc.getDateUpload())
+                                .cheminFichier(doc.getCheminFichier())
                                 .build()).collect(Collectors.toList());
                     }
                     return DemandeVisaResponseDTO.PieceResponseDTO.builder()
