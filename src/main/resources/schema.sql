@@ -51,3 +51,16 @@ CREATE TABLE IF NOT EXISTS demande_piece (
     piece_id INT REFERENCES piece_justificative(id) ON DELETE CASCADE,
     fourni BOOLEAN DEFAULT FALSE
 );
+
+CREATE TABLE IF NOT EXISTS scan_document (
+    id SERIAL PRIMARY KEY,
+    demande_piece_id INT REFERENCES demande_piece(id) ON DELETE CASCADE,
+    nom_fichier VARCHAR(255) NOT NULL,
+    nom_original VARCHAR(255) NOT NULL,
+    type_document VARCHAR(50),
+    content_type VARCHAR(100),
+    taille_octets BIGINT,
+    chemin_fichier VARCHAR(500),
+    date_upload TIMESTAMP DEFAULT NOW()
+);
+
