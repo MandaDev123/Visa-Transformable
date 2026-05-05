@@ -44,6 +44,9 @@
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <a th:href="@{/demandes}" class="btn btn-secondary">← Retour</a>
+                    <div style="margin-right: 15px; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; background: white;">
+                        <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=http://10.102.170.134:5173/suivi/' + ${demande.id}" alt="QR Code" style="width: 80px; height: 80px; display: block;" title="Scanner pour suivre sur l'application web">
+                    </div>
                     <form th:action="@{'/demandes/' + ${demande.id} + '/creer-derive'}" method="post"
                         style="display:inline;">
                         <input type="hidden" name="categorie" value="DUPLICATA">

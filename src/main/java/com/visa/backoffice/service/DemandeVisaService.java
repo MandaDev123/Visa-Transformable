@@ -264,6 +264,30 @@ public class DemandeVisaService {
         if (demande.getDateExpirationVisa() == null)
             throw new IllegalArgumentException("Date expiration visa requise");
 
+        // Vérification unicité passeport / visa par demandeur
+        List<DemandeVisa> historiquePasseport = demandeVisaRepository.findHistoriqueByNumero(demande.getNumeroPasseport());
+        if (!historiquePasseport.isEmpty()) {
+            DemandeVisa ref = historiquePasseport.get(0);
+            if (!ref.getNom().equalsIgnoreCase(demande.getNom()) || !ref.getPrenoms().equalsIgnoreCase(demande.getPrenoms())) {
+                // If it's the same ID, it's fine (update mode), but if it's a different person entirely:
+                if (!ref.getId().equals(demande.getId())) {
+                    throw new IllegalArgumentException("Ce numéro de passeport appartient déjà à un autre demandeur (" + ref.getNom() + ").");
+                }
+            }
+        }
+        
+        if (demande.getNumeroVisa() != null && !demande.getNumeroVisa().isBlank()) {
+            List<DemandeVisa> historiqueVisa = demandeVisaRepository.findHistoriqueByNumero(demande.getNumeroVisa());
+            if (!historiqueVisa.isEmpty()) {
+                DemandeVisa ref = historiqueVisa.get(0);
+                if (!ref.getNom().equalsIgnoreCase(demande.getNom()) || !ref.getPrenoms().equalsIgnoreCase(demande.getPrenoms())) {
+                    if (!ref.getId().equals(demande.getId())) {
+                        throw new IllegalArgumentException("Ce numéro de visa appartient déjà à un autre demandeur.");
+                    }
+                }
+            }
+        }
+
         // Vérification des pièces obligatoires
         if (!verifierPieces(demande)) {
             throw new IllegalArgumentException("Les pièces justificatives obligatoires doivent toutes être cochées.");
