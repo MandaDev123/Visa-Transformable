@@ -63,3 +63,4 @@ CREATE TABLE IF NOT EXISTS scan_document (
     chemin_fichier VARCHAR(500),
     date_upload TIMESTAMP DEFAULT NOW()
 );
+
