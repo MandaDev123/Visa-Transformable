@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS demande_visa (
     lieu_reference_visa VARCHAR(150),
     numero_visa VARCHAR(50),
     numero_carte_resident VARCHAR(50),
-    date_expiration_visa DATE
+    date_expiration_visa DATE,
+    photo_identite_base64 TEXT,
+    signature_base64 TEXT
 );
 
 CREATE TABLE IF NOT EXISTS piece_justificative (
