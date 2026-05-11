@@ -1,6 +1,7 @@
 package com.visa.backoffice.controller;
 
 import com.visa.backoffice.entity.ScanDocument;
+import com.visa.backoffice.service.DemandeVisaService;
 import com.visa.backoffice.service.ScanDocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.PathResource;
@@ -23,6 +24,7 @@ import java.nio.file.Paths;
 public class ScanDocumentController {
 
     private final ScanDocumentService scanDocumentService;
+    private final DemandeVisaService demandeVisaService;
 
     /**
      * Upload d'un document
@@ -88,6 +90,38 @@ public class ScanDocumentController {
                     .body(resource);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Sauvegarder la photo d'identité (capture webcam, base64 data-URI)
+     */
+    @PostMapping("/photo-identite")
+    @ResponseBody
+    public ResponseEntity<String> sauvegarderPhotoIdentite(
+            @PathVariable("demandeId") Long demandeId,
+            @RequestBody String base64DataUri) {
+        try {
+            demandeVisaService.sauvegarderPhoto(demandeId, base64DataUri.trim());
+            return ResponseEntity.ok("OK");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Sauvegarder la signature (dessin sur canvas, base64 data-URI)
+     */
+    @PostMapping("/signature")
+    @ResponseBody
+    public ResponseEntity<String> sauvegarderSignature(
+            @PathVariable("demandeId") Long demandeId,
+            @RequestBody String base64DataUri) {
+        try {
+            demandeVisaService.sauvegarderSignature(demandeId, base64DataUri.trim());
+            return ResponseEntity.ok("OK");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
