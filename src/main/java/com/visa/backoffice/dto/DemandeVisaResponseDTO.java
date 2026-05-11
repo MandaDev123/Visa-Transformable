@@ -42,6 +42,10 @@ public class DemandeVisaResponseDTO {
 
     private List<PieceResponseDTO> pieces;
 
+    // Photo d'identité et signature (base64 data-URI)
+    private String photoIdentiteBase64;
+    private String signatureBase64;
+
     @Getter
     @Setter
     @NoArgsConstructor
