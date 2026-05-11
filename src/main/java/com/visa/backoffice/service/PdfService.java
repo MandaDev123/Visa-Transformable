@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -281,51 +282,48 @@ public class PdfService {
 
 
             PdfPCell photoCell = boxCell(new Color(220, 230, 250));
-
             photoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-
             photoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-
             photoCell.setFixedHeight(180);
 
-            String photoPath = findPhotoChemin(d);
-
-            if (photoPath != null) {
-
-                try {
-
-                    Image ph = Image.getInstance(photoPath);
-
-                    ph.scaleToFit(130, 170);
-
-                    ph.setAlignment(Image.ALIGN_CENTER);
-
-                    photoCell.addElement(ph);
-
-                } catch (Exception ignored) {
-
-                    // image corrompue : cadre vide
-
-                }
-
+            // Priorité 1 : photo capturée par webcam (base64)
+            Image photoImg = loadImageFromBase64OrPath(d.getPhotoIdentiteBase64(), findPhotoChemin(d));
+            if (photoImg != null) {
+                photoImg.scaleToFit(130, 170);
+                photoImg.setAlignment(Image.ALIGN_CENTER);
+                photoCell.addElement(photoImg);
             }
-
-            // Si pas de photo : cellule vide avec fond (pas de texte)
-
 
 
             mainTable.addCell(dataCell);
-
             mainTable.addCell(photoCell);
-
             doc.add(mainTable);
 
+            // Signature du demandeur
+            if (d.getSignatureBase64() != null && !d.getSignatureBase64().isBlank()) {
+                try {
+                    PdfPTable sigTable = new PdfPTable(2);
+                    sigTable.setWidthPercentage(100);
+                    sigTable.setWidths(new float[]{1f, 1f});
 
+                    PdfPCell labelSig = noBorderCell();
+                    labelSig.addElement(new Paragraph("SIGNATURE DU TITULAIRE", fontBoldC(8, new Color(80,80,80))));
+                    sigTable.addCell(labelSig);
+
+                    PdfPCell imgSigCell = noBorderCell();
+                    imgSigCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    Image sigImg = loadImageFromBase64(d.getSignatureBase64());
+                    if (sigImg != null) {
+                        sigImg.scaleToFit(150, 60);
+                        imgSigCell.addElement(sigImg);
+                    }
+                    sigTable.addCell(imgSigCell);
+                    doc.add(sigTable);
+                } catch (Exception ignored) {}
+            }
 
             // Bande MRZ-like
-
             addMrzBand(doc, d, "VISA");
-
 
             doc.close();
 
@@ -391,18 +389,14 @@ public class PdfService {
             photoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             photoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             photoCell.setFixedHeight(140);
-            String photoPath = findPhotoChemin(d);
-            if (photoPath != null) {
-                try {
-                    Image ph = Image.getInstance(photoPath);
-                    ph.scaleToFit(100, 130);
-                    ph.setAlignment(Image.ALIGN_CENTER);
-                    photoCell.addElement(ph);
-                } catch (Exception ignored) {
-                    // image corrompue : cadre vide
-                }
+
+            // Priorité 1 : photo webcam base64
+            Image photoImgCR = loadImageFromBase64OrPath(d.getPhotoIdentiteBase64(), findPhotoChemin(d));
+            if (photoImgCR != null) {
+                photoImgCR.scaleToFit(100, 130);
+                photoImgCR.setAlignment(Image.ALIGN_CENTER);
+                photoCell.addElement(photoImgCR);
             }
-            // Si pas de photo : cellule vide avec fond bleu (pas de texte)
 
             // Données
             PdfPCell dataCell = transparentCell();
@@ -418,6 +412,27 @@ public class PdfService {
             mainTable.addCell(photoCell);
             mainTable.addCell(dataCell);
             doc.add(mainTable);
+
+            // Signature du demandeur sur la carte
+            if (d.getSignatureBase64() != null && !d.getSignatureBase64().isBlank()) {
+                try {
+                    PdfPTable sigTable = new PdfPTable(2);
+                    sigTable.setWidthPercentage(100);
+                    sigTable.setWidths(new float[]{1.5f, 1f});
+                    PdfPCell lblCell = transparentCell();
+                    lblCell.addElement(new Paragraph("SIGNATURE", fontBoldC(7, new Color(180,200,255))));
+                    sigTable.addCell(lblCell);
+                    PdfPCell sigCell = transparentCell();
+                    sigCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    Image sigImg = loadImageFromBase64(d.getSignatureBase64());
+                    if (sigImg != null) {
+                        sigImg.scaleToFit(120, 40);
+                        sigCell.addElement(sigImg);
+                    }
+                    sigTable.addCell(sigCell);
+                    doc.add(sigTable);
+                } catch (Exception ignored) {}
+            }
 
             // Bande MRZ
             addMrzBandWhite(doc, d, "CR");
@@ -651,5 +666,34 @@ public class PdfService {
         return lower.endsWith(".jpg") || lower.endsWith(".jpeg")
                 || lower.endsWith(".png") || lower.endsWith(".gif")
                 || lower.endsWith(".bmp") || lower.endsWith(".webp");
+    }
+
+    // ─────────────────────────────────────────────
+    // Chargement image depuis base64 ou chemin fichier
+    // ─────────────────────────────────────────────
+    private Image loadImageFromBase64OrPath(String base64DataUri, String filePath) {
+        if (base64DataUri != null && !base64DataUri.isBlank()) {
+            Image img = loadImageFromBase64(base64DataUri);
+            if (img != null) return img;
+        }
+        if (filePath != null) {
+            try {
+                return Image.getInstance(filePath);
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    private Image loadImageFromBase64(String base64DataUri) {
+        try {
+            String data = base64DataUri;
+            if (data.contains(",")) {
+                data = data.substring(data.indexOf(',') + 1);
+            }
+            byte[] bytes = Base64.getDecoder().decode(data);
+            return Image.getInstance(bytes);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

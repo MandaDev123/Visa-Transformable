@@ -84,4 +84,11 @@ public class DemandeVisa {
     @OneToMany(mappedBy = "demande", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<DemandePiece> pieces = new ArrayList<>();
+
+    // ===== Photo & Signature (base64) =====
+    @Column(name = "photo_identite_base64", columnDefinition = "TEXT")
+    private String photoIdentiteBase64;
+
+    @Column(name = "signature_base64", columnDefinition = "TEXT")
+    private String signatureBase64;
 }

@@ -398,6 +398,30 @@ public class DemandeVisaService {
                 .numeroCarteResident(demande.getNumeroCarteResident())
                 .dateExpirationVisa(demande.getDateExpirationVisa())
                 .pieces(piecesResponse)
+                .photoIdentiteBase64(demande.getPhotoIdentiteBase64())
+                .signatureBase64(demande.getSignatureBase64())
                 .build();
+    }
+
+    // =============================================
+    // Sauvegarder photo identité (webcam)
+    // =============================================
+    @Transactional
+    public void sauvegarderPhoto(Long id, String base64DataUri) {
+        DemandeVisa demande = demandeVisaRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Demande non trouvée : " + id));
+        demande.setPhotoIdentiteBase64(base64DataUri);
+        demandeVisaRepository.save(demande);
+    }
+
+    // =============================================
+    // Sauvegarder signature (pad)
+    // =============================================
+    @Transactional
+    public void sauvegarderSignature(Long id, String base64DataUri) {
+        DemandeVisa demande = demandeVisaRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Demande non trouvée : " + id));
+        demande.setSignatureBase64(base64DataUri);
+        demandeVisaRepository.save(demande);
     }
 }

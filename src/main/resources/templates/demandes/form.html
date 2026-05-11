@@ -439,6 +439,86 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ============================================= -->
+                <!-- PHOTO IDENTITÉ (Webcam) -->
+                <!-- ============================================= -->
+                <div class="card" style="margin-top: 2rem; margin-bottom: 1.5rem;"
+                    th:if="${demandeResponse != null}">
+                    <div class="card-header">
+                        <h2>📷 Photo d'Identité (Webcam)</h2>
+                        <span style="font-size:0.82rem; color:var(--text-muted);">Capturez la photo du demandeur directement depuis la webcam.</span>
+                    </div>
+                    <div class="card-body" style="display:flex; gap:2rem; flex-wrap:wrap; align-items:flex-start;">
+
+                        <!-- Prévisualisation actuelle -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
+                            <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">Photo enregistrée</p>
+                            <div style="width:130px; height:160px; border:2px solid var(--border-color); border-radius:8px; overflow:hidden; background:#0f172a; display:flex; align-items:center; justify-content:center;">
+                                <img th:if="${demandeResponse.photoIdentiteBase64 != null}"
+                                     th:src="${demandeResponse.photoIdentiteBase64}"
+                                     id="savedPhotoPreview"
+                                     style="width:100%; height:100%; object-fit:cover;">
+                                <span th:if="${demandeResponse.photoIdentiteBase64 == null}" id="noPhotoLabel"
+                                      style="font-size:2.5rem;">🚫</span>
+                            </div>
+                        </div>
+
+                        <!-- Flux webcam -->
+                        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <video id="webcamVideo" autoplay muted playsinline
+                                   style="width:200px; height:150px; border-radius:8px; border:2px solid var(--border-color); background:#000; display:none;"></video>
+                            <canvas id="webcamCanvas" style="display:none; width:200px; height:150px; border-radius:8px;"></canvas>
+
+                            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                                <button type="button" id="btnStartCam" class="btn btn-secondary" onclick="startWebcam()">🎥 Ouvrir Webcam</button>
+                                <button type="button" id="btnCapture" class="btn btn-primary" onclick="capturePhoto()" style="display:none;">📸 Capturer</button>
+                                <button type="button" id="btnSavePhoto" class="btn btn-success" onclick="savePhoto()" style="display:none;">💾 Sauvegarder la Photo</button>
+                            </div>
+                            <p id="photoStatus" style="font-size:0.8rem; color:var(--accent-success); display:none;">✅ Photo sauvegardée !</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================= -->
+                <!-- SIGNATURE (Pad souris/trackpad) -->
+                <!-- ============================================= -->
+                <div class="card" style="margin-top: 2rem; margin-bottom: 1.5rem;"
+                    th:if="${demandeResponse != null}">
+                    <div class="card-header">
+                        <h2>✍️ Signature du Demandeur</h2>
+                        <span style="font-size:0.82rem; color:var(--text-muted);">Dessinez la signature avec la souris ou le trackpad.</span>
+                    </div>
+                    <div class="card-body" style="display:flex; gap:2rem; flex-wrap:wrap; align-items:flex-start;">
+
+                        <!-- Signature enregistrée -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
+                            <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">Signature enregistrée</p>
+                            <div style="width:200px; height:80px; border:2px solid var(--border-color); border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center;">
+                                <img th:if="${demandeResponse.signatureBase64 != null}"
+                                     th:src="${demandeResponse.signatureBase64}"
+                                     id="savedSignaturePreview"
+                                     style="max-width:100%; max-height:100%; object-fit:contain;">
+                                <span th:if="${demandeResponse.signatureBase64 == null}"
+                                      style="font-size:1.5rem; color:#ccc;">Aucune</span>
+                            </div>
+                        </div>
+
+                        <!-- Pad de signature -->
+                        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <canvas id="signaturePad"
+                                    width="400" height="120"
+                                    style="border:2px solid var(--border-color); border-radius:8px; background:#fff; cursor:crosshair; touch-action:none; display:block;">
+                            </canvas>
+                            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                                <button type="button" class="btn btn-secondary" onclick="clearSignature()">🗑️ Effacer</button>
+                                <button type="button" class="btn btn-success" onclick="saveSignature()">💾 Sauvegarder la Signature</button>
+                            </div>
+                            <p id="sigStatus" style="font-size:0.8rem; color:var(--accent-success); display:none;">✅ Signature sauvegardée !</p>
+                        </div>
+                    </div>
+                </div>
+
         </main>
 
         <footer class="footer">
@@ -512,6 +592,14 @@
             }
         }
     </script>
+
+    <!-- Photo & Signature scripts (�diteur seulement) -->
+    <th:block th:if="${demandeResponse != null}">
+        <script th:inline="javascript">
+            window._demandeId = /*[[${demandeResponse.id}]]*/ null;
+        </script>
+        <script th:src="@{/js/photo-signature.js}"></script>
+    </th:block>
 </body>
 
 </html>
